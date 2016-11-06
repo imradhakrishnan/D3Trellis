@@ -32,9 +32,17 @@
                 var selectedRect; //to store the current rect selected by the user
                 var selectedStrokeWidth = "4"; //if a rect is selected, inc its stroke width
                 var dataConfig = {hasSelection: true}; //parameter to be passed to dataInterface API while importing data
+
+
                 if (is10point3) {
                     me.addThresholdMenuItem(); // to enable thresholding option for metric
                     dataConfig.hasThreshold = true;
+                    me.setDefaultPropertyValues({
+                            numRows: 4,
+                            numCols: 2
+                        }
+                    );
+
                     properties = me.getProperties(); //reference to custom properties
                 }
                 me.addUseAsFilterMenuItem(); //to use this visualization as a filter or selector
@@ -46,8 +54,10 @@
                 }
                 var rawD = me.dataInterface.getRawData(mstrmojo.models.template.DataInterface.ENUM_RAW_DATA_FORMAT.ADV, dataConfig); //to get the data along with attribute selector and threshold info
 
-
                 var dataS = []; //data to be passed to the Dimple library
+                debugger;
+                var nCols = !is10point3 ? 2 : me.getProperty("numCols");
+                var nRows = !is10point3 ? 4 : me.getProperty("numRows");
 
                 //to populate dataS var - flattening the data to make it usable with the library
                 for (var i = 0; i < rawDRows.length; i++) {
@@ -66,7 +76,7 @@
                 var horMetric =  me.zonesModel.getDropZones().zones[0].items[0].n;
                 var verMetric = me.zonesModel.getDropZones().zones[1].items[0].n;
                 var groupby = me.zonesModel.getDropZones().zones[2].items[0].n;
-                var subset = me.zonesModel.getDropZones().zones[2].items[1].n;
+              //  var subset = me.zonesModel.getDropZones().zones[2].items[1].n;
 
                 //  var rawD = me.dataInterface.getRawData(mstrmojo.models.template.DataInterface.ENUM_RAW_DATA_FORMAT.ADV, dataConfig);
                 var chart = d3.select(me.domNode).select("svg");
@@ -86,15 +96,15 @@
                     var categories = dimple.getUniqueValues(dataS, groupby);
                     var horValues = dimple.getUniqueValues(dataS, horMetric);
                     console.log("Months" + categories);
-
+                    debugger;
                     // Set the bounds for the charts
                     var row = 0,
                         col = 0,
-                        top = 25,
+                        top = 15,
                         left = 60,
                         inMarg = 15,
-                        width = (total_width - inMarg - left - 100) / 2,
-                        height = (total_height - top - 120) / 4,
+                        width = (total_width - inMarg - left - 100) / nCols,
+                        height = (total_height - top - 120) / nRows,
                         totalWidth = parseFloat(svg.attr("width"));
 
                     // Pick the latest 12 dates
@@ -113,7 +123,7 @@
                         var chartData = dimple.filterData(dataS, groupby, category);
                             console.log(chartData);
                         // Use d3 to draw a text label for the month
-                        debugger;
+
                         svg
                             .append("text")
                             .attr("x", left + (col * (width + inMarg)) + (width / 2))
@@ -155,7 +165,7 @@
                             y.shapes.selectAll("text").remove();
                         }
                         // If this is not in the last row remove the x text
-                        if (row < 3) {
+                        if (row < nRows-1) {
                             x.shapes.selectAll("text").remove();
                         }
                         // Remove the axis labels
