@@ -8,7 +8,8 @@
         "mstrmojo.models.template.DataInterface",
         "mstrmojo.vi.models.editors.CustomVisEditorModel"
     );
-
+    var colors = []; //to store color for each bar
+    var properties; //global var to store custom properties
     mstrmojo.plugins.D3Trellis.D3Trellis = mstrmojo.declare(
         mstrmojo.CustomVisBase,
         null,
@@ -20,6 +21,23 @@
             externalLibraries: [{url:"http://d3js.org/d3.v3.min.js"},{url:"http://dimplejs.org/dist/dimple.v2.2.0.min.js"}],
             useRichTooltip: false,
             reuseDOMNode: false,
+            setFillColors: function setFillColors(attElementID) {
+                if (this.getProperty("colorBy")) {
+                    properties["fillColor"] = {
+                        fillColor: colors[+attElementID].fill,
+                        fillAlpha: colors[+attElementID].opacity * 100
+                    };
+                }
+            },
+            setColorsVar: function setColorsVar(fillColorObj) {
+                debugger;
+                if (colors) {
+                    colors[+properties["colorBy"]].fill = fillColorObj.fillColor;
+                    if (fillColorObj.fillAlpha) {
+                        colors[+properties["colorBy"]].opacity = +fillColorObj.fillAlpha / 100;
+                    }
+                }
+            },
             plot:function(){
                 debugger;
                 var me = this;
@@ -29,8 +47,6 @@
                 var total_height = parseInt(me.height, 10);
                 var margin = {top: 50, right: 40, bottom: 40, left: 60};
                 var legendPos = {x: 240, y: 10, width: (total_width - margin.right - margin.left), height: 20, align: "left"}; //Increase the width to see more elements in legend
-                var selectedRect; //to store the current rect selected by the user
-                var selectedStrokeWidth = "4"; //if a rect is selected, inc its stroke width
                 var dataConfig = {hasSelection: true}; //parameter to be passed to dataInterface API while importing data
 
 
@@ -68,7 +84,6 @@
                     }
                     dataS.push(object);
                 }
-                debugger;
                 var rowTitles = me.dataInterface.getRowTitles();
                 var colTitles = me.dataInterface.getColTitles();
                 //If we are using in document, since drop zones are not available, get the attribute names from dataInterface API..
@@ -156,6 +171,11 @@
                         // Month is only passed here so that it shows in the tooltip.
                         myChart.addSeries([groupby, horMetric], dimple.plot.bar);
 
+                        if(colors.length > 0){
+                            for (var i = 0; i < colors.length; i++) {
+                                myChart.assignColor(horValues[i], colors[i].fill, colors[i].stroke, colors[i].opacity);
+                            }
+                        }
                         // Draw the chart
                         myChart.draw();
 
@@ -174,10 +194,20 @@
 
                         // Move to the next column
                         col += 1;
+                        if(colors.length == 0){
+                            debugger;
+                            for(var i = 0; i < horValues.length; i++){
+                                colors[i]  = myChart.getColor(horValues[i]);
+                            }
+                        }
+
 
                     }//, this);
+
                 //}
                 );
+
+
             
 
 
